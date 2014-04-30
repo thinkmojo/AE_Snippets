@@ -1,0 +1,402 @@
+
+/********************************
+ Inertial Bounce 
+ Inertial Bounce is like making your moves "rubbery." Layers will overextend, then settle into place on position and rotation keyframes.
+ ********************************/
+// Inertial Bounce (moves settle into place after bouncing around a little)
+n = 0;
+if (numKeys > 0){
+n = nearestKey(time).index;
+if (key(n).time > time){
+n--;
+}
+}
+if (n == 0){
+t = 0;
+}else{
+t = time - key(n).time;
+}
+
+if (n > 0){
+v = velocityAtTime(key(n).time - thisComp.frameDuration/10);
+amp = .05;
+freq = 4.0;
+decay = 2.0;
+value + v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);
+}else{
+value;
+}
+
+
+
+/********************************
+ 3d > 2d
+ ********************************/
+//Takes 3d space of layer and converts to 2d screen space
+thisComp.layer("Light 1").toComp([0,0,0]);
+
+
+/********************************
+ Jumpy Wiggle
+ Jumpy Wiggle 1 makes wiggle skip and hold rather than move fluidly.
+ ********************************/
+// Jumpy Wiggle 1 (moves at a random FPS)
+v=wiggle(5,50);
+if(v < 50)v=0;
+if(v > 50)v=100;
+v
+
+/********************************
+ Jumpy Wiggle 2
+ Jumpy Wiggle 2 is similar to 1, but works at a defined FPS so your "jump" will happen at a regular pace.
+ ********************************/
+// Jumpy Wiggle 2 (moves at a defined FPS)
+fps=5; //frequency
+amount=50; //amplitude
+wiggle(fps,amount,octaves = 1, amp_mult = 0.5,(Math.round(time*fps))/fps);
+
+
+
+/********************************
+ Throw
+ Sometimes you just want something to move constantly without keyframing it. Use throw.
+ ********************************/
+// Throw (move at a constant speed without keyframes)
+veloc = -10; //horizontal velocity (pixels per second)
+x = position[0] + (time - inPoint) *veloc;
+y = position[1];
+[x,y]
+
+
+/********************************
+ Throw / Rotation
+ Same as throw, but for rotation.
+ ********************************/
+// Spin (rotate at a constant speed without keyframes)
+veloc = 360; //rotational velocity (degrees per second)
+r = rotation + (time - inPoint) *veloc;
+[r]
+
+
+/********************************
+ Autofade
+ ********************************/
+//Autofade: Add to opacity
+transition = 20;       // transition time in frames
+if (marker.numKeys<2){
+tSecs = transition / ( 1 / thisComp.frameDuration); // convert to seconds
+linear(time, inPoint, inPoint + tSecs, 0, 100) - linear(time, outPoint - tSecs, outPoint, 0, 100)
+}else{
+linear(time, inPoint, marker.key(1).time, 0, 100) - linear(time, marker.key(2).time, outPoint, 0, 100)
+}
+
+
+/********************************
+ Snap zoom in and out
+ ********************************/
+//Snap zoom in and out: apply to scale
+snapScale = 300; //percent of scale to zoom
+
+trans = 4; //  transition time in frames
+trans = trans * thisComp.frameDuration;
+inTrans  = easeOut(time, inPoint, inPoint + trans, [snapScale,snapScale], [0,0]);
+outTrans = easeIn(time, outPoint, outPoint - trans, [0,0], [snapScale, snapScale]);
+value+ inTrans + outTrans
+
+
+/********************************
+ Y Axis Jitter
+ ********************************/
+// Y Axis Jitter
+probability = 8 ;  //higher is less likely
+pos = 50;
+val  = random(-probability-2, 1);
+m = clamp(val, 0, 1);
+y = wiggle(10, pos*m)-position;
+value + [0, y[1]]
+
+
+/********************************
+ 3D layer invisible when backwards
+ ********************************/
+3D layer invisible while facing backwards to camera (use on Opacity):
+if (toCompVec([0, 0, 1])[2] > 0 ) value else 0
+
+
+/********************************
+ Parent Puppet pin to Null
+ ********************************/
+Parent Puppet pin to Null (there is a script on AEscripts for this also I beleve, haven't used it):
+n=thisComp.layer("NullObject_Name");
+nullpos=n.toComp(n.anchorPoint);
+fromComp(nullpos);
+
+
+/********************************
+ Add a slider and name to 'Value'
+ ********************************/
+places = 3; //number of decimal places desired
+val = effect("Value")("Slider"); //sub in the name of your slider here
+
+factor = Math.pow(0.1, places) ;
+sign = "";
+if (val < 0) sign = "-";
+
+val = Math.abs(val);
+whole = Math.floor(val);
+fraction = "" + Math.round((val - whole)/factor)*factor;
+
+for (fraction; fraction.length < places+2; fraction+="0");
+
+sign + whole + "." + fraction.substring(2, places+2)
+
+Position from layer above
+thisComp.layer(index - 1).transform.position
+
+
+
+/********************************
+ Number of decimal places
+ ********************************/
+//--Begin Expression
+nums = thisComp.layer("Deep Lime Green Solid 1").effect("Slider Control")("Slider");
+numOfPlaces = 3;
+//--Do not modify below this line
+
+function roundTo(number, places)
+{
+num = Math.round ( Math.pow(number, places) );
+
+
+/********************************
+ NUMBER ROUNDING
+ ********************************/
+myNumber = 23.3453255243697978;
+round(myNumber, 2);
+
+function round(aNum, dP) {
+      return(Math.round(aNum*Math.pow(10, dP))/Math.pow(10, dP));
+}
+num /= Math.pow(10, places);
+return num;
+}
+
+roundTo(nums, numOfPlaces)
+
+//--End expression
+
+
+/********************************
+ Round decimal
+ ********************************/
+Math.round(your_decimal_number_here)
+
+
+
+/********************************
+  RANDOM MOVEMENT
+ ********************************/
+//Returns two values by default; [x-pos. y-pos]
+segDur = .5;// duration of each "segment" of random motion
+minVal = [0.1*thisComp.width, 0.1*thisComp.height];
+maxVal = [0.9*thisComp.width, 0.9*thisComp.height];
+
+seed = Math.floor(time/segDur);
+segStart = seed*segDur;
+seedRandom(seed,true);
+startVal =  random(minVal,maxVal);
+seedRandom(seed+1,true);
+endVal = random(minVal,maxVal);
+ease(time,segStart,segStart + segDur, startVal, endVal);
+
+
+
+/********************************
+ Time Output
+ ********************************/
+//Contains rounding + always display 2 digits
+
+min = Math.floor(time);
+strMin = String(min);
+if(min < 10){
+   strMin = '0' + strMin;
+}
+
+sec = Math.round(((time) - min)*100);
+strSec = String(sec);
+if(sec < 10){
+   strSec = '0' + strSec;
+}
+
+"18:22:" + strMin + ":" + strSec
+
+
+
+/********************************
+ Random Letters
+ ********************************/
+//Begin expression
+numOfLetters = 25; //Modify me
+useSpaces = true; //Modify me
+changeEveryFrame = true; //Modify me
+
+//Don't modify below this line
+
+seedRandom(index, !changeEveryFrame)
+//--
+function genLetter( ) {
+r = random(65, 90);//from a to z
+return String.fromCharCode( r );
+}
+s = "";
+for(i = 0; i < numOfLetters; i++)
+{
+s += genLetter();
+if(useSpaces)
+s += " ";
+}
+s
+//End expression
+
+
+
+/********************************
+ Loop
+ ********************************/
+//Looping Script
+freq = 0.6;
+amp = 5;
+loopTime = 10;
+t = time % loopTime;
+wiggle1 = wiggle(freq, amp, 1, 0.5, t);
+wiggle2 = wiggle(freq, amp, 1, 0.5, t - loopTime);
+linear(t, 0, loopTime, wiggle1, wiggle2)
+
+
+
+/********************************
+ Random Position HOLD
+ ********************************/
+holdTime = .5; //time to hold each position (seconds)
+minVal = [0.1*thisComp.width, 0.1*thisComp.height];
+maxVal = [0.9*thisComp.width, 0.9*thisComp.height];
+
+seed = Math.floor(time/holdTime);
+seedRandom(seed,true);
+random(minVal,maxVal)
+Smooth Keyframes
+smooth(width = .2, samples = 5, t = time)
+
+
+/********************************
+ Creating Trails
+ ********************************/
+
+http://www.motionscript.com/mastering-expressions/follow-the-leader.html
+
+delay = 5; //number of frames to delay
+
+d = delay*thisComp.frameDuration*(index - 1);
+thisComp.layer(1).position.valueAtTime(time - d)
+
+OR
+thisComp.layer(index+1).transform.position.valueAtTime(time-.1)
+
+
+
+
+/********************************
+ Smooth Wiggle
+ ********************************/
+http://forums.adobe.com/message/1799293#1799293
+
+seedRandom(time*5);
+wiggle(0,100);
+
+
+
+/********************************
+ Copy size and rescale from layer above
+ ********************************/
+thisComp.layer(index - 1).scale-[7,7]
+
+
+/********************************
+ Copy rotation from layer below and rotate 22.5
+ ********************************/
+thisComp.layer(index+1).transform.rotation+22.5
+
+
+/********************************
+ Copy position from layer above
+ ********************************/
+thisComp.layer(index-1).position
+
+/********************************
+ Keep x at 960, move Y X time * 100 pixels
+ ********************************/
+[960, position[1]+time*-100]
+
+
+
+/********************************
+ Time delay from layer above
+ ********************************/
+thisComp.layer(index+1).transform.position.valueAtTime(time-.1)
+
+
+/********************************
+ Wiggle in one direction only
+ ********************************/
+Wiggle Y Only:
+[value[0],wiggle(1,100)[1]]
+Wiggle X Only:
+[wiggle(5,30)[0],value[1]]
+Wiggle X and Y seperately:
+[wiggle(5,30)[0],wiggle(1,100)[1]]
+
+
+
+/********************************
+ Loop Types
+ ********************************/
+loopOut("pingpong")  // ABCD(CBABCDCBA)
+loopOut("continue") // ABCD(EFGHIJKL)
+loopOut("Cycle")  // ABCD(ABCDABCD)
+
+
+/********************************
+ Range Mapping
+ ********************************/
+input = effect("Slider Control")("Slider");
+inputLow = 0;
+inputHigh = 100;
+outputLow = -100;
+outputHigh = 100;
+linear(input,inputLow,inputHigh,outputLow,outputHigh)
+
+
+/********************************
+ For when you want burn in text to automatically display the layer name
+ (i.e. render out tiff sequence first, then making a QT w/ name burn in).
+ ********************************/
+//Make text layer, add expression to 'source text'. 
+function pad(number, length) { var str = '' + number; while (str.length < length) { str = '0' + str; } return str; } var theLayerName = thisComp.layer(index+1).name; var theLayerNameSplit = theLayerName.split('.'); theLayerNameSplit[0];
+
+//To change which layer is read for the name, change the (index+1) to (index+2) and so on. 
+
+
+/********************************
+ Counting numbers with comma
+ ********************************/
+startCount = 0;
+endCount = 11689;
+countDur = 1.2;
+s = "" + Math.round(linear(time,0,countDur,startCount,endCount));
+
+if (s.length > 3){
+s.substr(0, s.length -3) + "," + s.substr(-3);
+}else{
+s
+}
+
